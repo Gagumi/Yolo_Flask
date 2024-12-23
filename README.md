@@ -25,8 +25,8 @@
 
 在本地或服务器上克隆项目代码：
 ```bash
-git clone https://github.com/your-repository/yolo-flask.git
-cd yolo-flask
+git clone https://github.com/Gagumi/Yolo_Flask.git
+cd YOLO_FLASK
 ```
 
 ### 2. 配置 Docker 环境
