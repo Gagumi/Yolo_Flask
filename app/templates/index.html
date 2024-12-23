@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLO API Demo</title>
+</head>
+<body>
+    <h1>YOLOv5 Object Detection</h1>
+    <form id="upload-form" method="post" enctype="multipart/form-data" action="/upload">
+        <input type="file" name="file" accept="image/*" required>
+        <button type="submit">Upload and Detect</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        const form = document.getElementById("upload-form");
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch("/upload", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const resultDiv = document.getElementById("result");
+
+                if (data.detections) {
+                    resultDiv.innerHTML = `<h2>Detections:</h2><pre>${JSON.stringify(data.detections, null, 2)}</pre>`;
+                    
+                    const img = document.createElement("img");
+                    img.src = `/uploads/${data.image}`;
+                    img.width = 500;
+
+                    // 处理图片加载失败
+                    img.onerror = () => {
+                        resultDiv.innerHTML += `<h2>Error:</h2><p>Failed to load the image at /uploads/${data.image}</p>`;
+                    };
+
+                    resultDiv.appendChild(img);
+                } else {
+                    resultDiv.innerHTML = `<h2>Error:</h2><p>${data.error}</p>`;
+                }
+            } catch (error) {
+                console.error("Error uploading file:", error);
+                const resultDiv = document.getElementById("result");
+                resultDiv.innerHTML = `<h2>Error:</h2><p>${error.message}</p>`;
+            }
+        };
+    </script>
+</body>
+</html>
