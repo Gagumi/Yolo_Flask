@@ -1,7 +1,9 @@
 import os
 from flask import Blueprint, request, render_template, jsonify, send_from_directory, current_app
 from app.utils import run_yolo_inference
+from flask import Response, stream_with_context
 import logging
+import time
 
 main = Blueprint("main", __name__)
 
@@ -39,3 +41,25 @@ def get_file(filename):
     logging.basicConfig(level=logging.INFO)
     logging.info(f"Serving file: {uploads_dir}/{filename}")
     return send_from_directory(uploads_dir, filename)
+
+@main.route("/stream")
+def stream():
+    """实时推送检测后的图像帧"""
+    def generate_frames():
+        frames_path = "./ros_camera_simulation/frames"
+        files = sorted(os.listdir(frames_path))  # 按顺序获取图片帧
+        for file in files:
+            if file.endswith(".jpg") or file.endswith(".png"):
+                filepath = os.path.join(frames_path, file)
+                detections, processed_image = run_yolo_inference(filepath)
+                
+                # 读取检测后的图片
+                with open(filepath, "rb") as f:
+                    frame = f.read()
+                
+                yield (b"--frame\r\n"
+                       b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n")
+                
+                time.sleep(0.1)  # 模拟摄像头帧率，间隔 100ms
+
+    return Response(stream_with_context(generate_frames()), mimetype="multipart/x-mixed-replace; boundary=frame")

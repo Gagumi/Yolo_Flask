@@ -29,23 +29,17 @@ def run_yolo_inference(image_path):
     """
     try:
         # YOLO 推理
-        results = model(image_path)  # 执行推理
+        results = model(image_path)
 
-        # 提取原始文件名
-        original_filename = os.path.basename(image_path)  # 如 "image.jpg"
+        # 获取原始文件名
+        original_filename = os.path.basename(image_path)
 
-        # 构造保存路径
-        upload_dir = "./app/uploads"
-        os.makedirs(upload_dir, exist_ok=True)  # 确保保存目录存在
-        prediction_path = os.path.join(upload_dir, original_filename)
+        # 覆盖保存处理后的图片
+        results.render()
+        for img in results.ims:
+            cv2.imwrite(image_path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
 
-        # 获取检测结果并保存标注后的图片
-        results.render()  # YOLO 会在原图上绘制检测框
-        for img in results.ims:  # 遍历每张图片（通常只有一张）
-            # 使用 OpenCV 保存图片
-            cv2.imwrite(prediction_path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
-
-        # 返回检测结果和保存后的图片文件名
+        # 返回检测结果
         return results.pandas().xyxy[0].to_dict(orient="records"), original_filename
 
     except Exception as e:

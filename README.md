@@ -203,3 +203,138 @@ ab -n 1000 -c 50 http://<your-server-ip>/
 ---
 
 如果有更多问题，欢迎联系！ 😊
+
+
+# 项目附加部分
+基于 ROS 和 Flask 的实时目标检测系统
+
+## 项目简介
+本项目结合了 ROS 和 Flask，实现了一个模拟实时监控的目标检测系统。系统通过 ROS 发布静态图片帧作为模拟摄像头数据，使用 Flask 订阅这些图像帧，运行 YOLOv5 目标检测，并通过前端网页实时展示检测结果。
+
+## 功能特性
+1. **图片帧发布**：
+   使用 ROS 将 `frames` 目录中的静态图片按顺序发布，模拟实时摄像头数据。
+
+2. **目标检测**：
+   Flask 应用订阅 ROS 图像数据，并使用 YOLOv5 进行目标检测。
+
+3. **实时展示**：
+   前端网页通过 Flask 提供的流式传输实时显示目标检测结果。
+
+4. **可扩展性**：
+   系统支持动态调整帧率，支持从实际摄像头数据流替换静态图片帧。
+
+## 环境要求
+- Ubuntu 18.04 或更高版本
+- ROS Melodic/Noetic
+- Python 3.6 或更高版本
+- Flask
+- OpenCV
+- YOLOv5
+
+## 安装步骤
+### 1. 配置 ROS 工作空间
+1. 初始化工作空间：
+   ```bash
+   mkdir -p ~/catkin_ws/src
+   cd ~/catkin_ws/src
+   catkin_init_workspace
+   ```
+2. 创建 ROS 包：
+   ```bash
+   cd ~/catkin_ws/src
+   catkin_create_pkg my_ros_package rospy std_msgs sensor_msgs cv_bridge
+   ```
+3. 编译工作空间：
+   ```bash
+   cd ~/catkin_ws
+   catkin_make
+   source devel/setup.bash
+   ```
+
+### 2. 配置 Python 环境
+1. 创建虚拟环境并安装依赖：
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install flask opencv-python-headless torch torchvision
+   ```
+2. 克隆 YOLOv5：
+   ```bash
+   git clone https://github.com/ultralytics/yolov5 ~/catkin_ws/src/my_ros_package/yolov5
+   ```
+
+### 3. 配置 ROS 节点
+1. 将 `ros_image_publisher.py` 保存到 ROS 包的 `scripts` 目录：
+   ```plaintext
+   ~/catkin_ws/src/my_ros_package/scripts/ros_image_publisher.py
+   ```
+2. 确保文件可执行：
+   ```bash
+   chmod +x ~/catkin_ws/src/my_ros_package/scripts/ros_image_publisher.py
+   ```
+
+### 4. 配置 Flask 应用
+1. 将 Flask 项目文件保存到：
+   ```plaintext
+   ~/catkin_ws/src/my_ros_package/app
+   ```
+2. 确保 `run.py` 文件在根目录。
+
+### 5. 运行项目
+1. 启动 ROS 发布节点：
+   ```bash
+   rosrun my_ros_package ros_image_publisher.py
+   ```
+2. 启动 Flask 应用：
+   ```bash
+   python run.py
+   ```
+3. 打开浏览器访问：
+   ```plaintext
+   http://localhost:5000/monitor_ros
+   ```
+
+## 文件结构
+```plaintext
+catkin_ws/
+├── src/
+│   ├── my_ros_package/
+│   │   ├── scripts/
+│   │   │   └── ros_image_publisher.py
+│   │   ├── app/
+│   │   │   ├── templates/
+│   │   │   │   └── monitor_ros.html
+│   │   │   ├── static/
+│   │   │   ├── routes.py
+│   │   │   ├── __init__.py
+│   │   │   └── utils.py
+│   │   └── yolov5/
+│   └── CMakeLists.txt
+└── run.py
+```
+
+## 常见问题
+1. **`roscore cannot run` 错误**：
+   请运行以下命令终止已有的 roscore：
+   ```bash
+   pkill -f rosmaster
+   ```
+
+2. **`python: No such file or directory` 错误**：
+   请确保脚本头部为：
+   ```python
+   #!/usr/bin/env python3
+   ```
+
+3. **404 错误**：
+   - 确保 Flask 应用正在运行。
+   - 确保访问的 URL 为 `http://localhost:5000/monitor_ros`。
+
+## 贡献
+欢迎对本项目提出建议或提交改进代码！
+
+## 许可证
+MIT License
+
+
